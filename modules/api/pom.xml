@@ -15,6 +15,10 @@
     
     <dependencies>
         <dependency>
+            <groupId>cloud.quinimbus</groupId>
+            <artifactId>config-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>name.falgout.jeffrey</groupId>
             <artifactId>throwing-streams</artifactId>
         </dependency>

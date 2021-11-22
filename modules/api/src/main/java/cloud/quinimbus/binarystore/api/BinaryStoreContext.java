@@ -1,11 +1,14 @@
 package cloud.quinimbus.binarystore.api;
 
 import cloud.quinimbus.binarystore.api.storage.BinaryStorage;
+import cloud.quinimbus.binarystore.api.storage.BinaryStorageProvider;
 import java.util.Optional;
 
 public interface BinaryStoreContext {
 
     Optional<BinaryStorage> getStorage(String id);
 
-    void setSchemaStorage(String id, BinaryStorage storage);
+    void setStorage(String id, BinaryStorage storage);
+
+    <T extends BinaryStorage> Optional<? extends BinaryStorageProvider<T>> getProvider(String alias);
 }

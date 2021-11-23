@@ -42,11 +42,11 @@ public class BinaryStoreContextProducer {
         var type = node.asString("type")
                 .orElseThrow(() -> new BinaryStoreException(
                         "Cannot autoconfigure storage %s, type configuration is missing".formatted(node.name())));
+        var provider = this.binaryStoreContext.getProvider(type)
+                .orElseThrow(() -> new BinaryStoreException(
+                        "Cannot autoconfigure storage %s, no provider for type %s found"
+                                .formatted(node.name(), type)));
         try {
-            var provider = this.binaryStoreContext.getProvider(type)
-                    .orElseThrow(() -> new BinaryStoreException(
-                            "Cannot autoconfigure storage %s, no provider for type %s found"
-                                    .formatted(node.name(), type)));
             var storage = provider.createStorage(node);
             this.binaryStoreContext.setStorage(node.name(), storage);
         } catch (BinaryStoreException ex) {

@@ -68,7 +68,7 @@ public class FileBasedBinaryStorage implements BinaryStorage {
     }
 
     private Path binaryPath(String id) throws IOException, BinaryStoreException {
-        return this.directoryPath(id).resolve("id");
+        return this.directoryPath(id).resolve(id);
     }
 
     private Path metaPath(String id) throws IOException, BinaryStoreException {
@@ -95,7 +95,7 @@ public class FileBasedBinaryStorage implements BinaryStorage {
     @Override
     public Optional<Binary> load(String id) throws BinaryStoreException {
         try {
-            var binaryPath = this.metaPath(id);
+            var binaryPath = this.binaryPath(id);
             var metaPath = this.metaPath(id);
             if (!Files.exists(metaPath)) {
                 return Optional.empty();

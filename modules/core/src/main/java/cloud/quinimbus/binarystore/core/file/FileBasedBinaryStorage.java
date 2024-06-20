@@ -113,7 +113,7 @@ public class FileBasedBinaryStorage implements BinaryStorage {
                                 meta.hash()));
             }
         } catch (IOException ex) {
-            throw new BinaryStoreException("Cannot load the binary data for %s".formatted(id));
+            throw new BinaryStoreException("Cannot load the binary data for %s".formatted(id), ex);
         }
     }
 

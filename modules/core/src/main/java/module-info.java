@@ -18,5 +18,5 @@ module cloud.quinimbus.binarystore.core {
     requires throwing.interfaces;
     requires throwing.lambdas;
     requires throwing.streams;
-    requires lombok;
+    requires static lombok;
 }

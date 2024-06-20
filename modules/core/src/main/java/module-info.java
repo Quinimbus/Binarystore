@@ -4,12 +4,14 @@ import cloud.quinimbus.binarystore.core.BinaryStoreContextImpl;
 import cloud.quinimbus.binarystore.core.file.FileBasedBinaryStorageProvider;
 
 module cloud.quinimbus.binarystore.core {
-    
-    provides BinaryStoreContext with BinaryStoreContextImpl;
-    provides BinaryStorageProvider with FileBasedBinaryStorageProvider;
+    provides BinaryStoreContext with
+            BinaryStoreContextImpl;
+    provides BinaryStorageProvider with
+            FileBasedBinaryStorageProvider;
+
     exports cloud.quinimbus.binarystore.core;
     exports cloud.quinimbus.binarystore.core.file;
-    
+
     requires cloud.quinimbus.binarystore.api;
     requires cloud.quinimbus.common.annotations;
     requires cloud.quinimbus.config.api;

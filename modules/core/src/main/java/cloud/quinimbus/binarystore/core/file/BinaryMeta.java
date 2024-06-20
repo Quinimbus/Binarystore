@@ -1,5 +1,3 @@
 package cloud.quinimbus.binarystore.core.file;
 
-public record BinaryMeta(String contentType, String hash) {
-
-}
+public record BinaryMeta(String contentType, String hash) {}

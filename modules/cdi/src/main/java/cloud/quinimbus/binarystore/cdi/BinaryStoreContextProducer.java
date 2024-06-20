@@ -21,7 +21,8 @@ public class BinaryStoreContextProducer {
     private ConfigNode configNode;
 
     public BinaryStoreContextProducer() throws BinaryStoreException {
-        this.binaryStoreContext = ServiceLoader.load(BinaryStoreContext.class).findFirst()
+        this.binaryStoreContext = ServiceLoader.load(BinaryStoreContext.class)
+                .findFirst()
                 .orElseThrow(() -> new IllegalStateException("Cannot find any BinaryStoreContext implementation"));
     }
 
@@ -42,10 +43,10 @@ public class BinaryStoreContextProducer {
         var type = node.asString("type")
                 .orElseThrow(() -> new BinaryStoreException(
                         "Cannot autoconfigure storage %s, type configuration is missing".formatted(node.name())));
-        var provider = this.binaryStoreContext.getProvider(type)
+        var provider = this.binaryStoreContext
+                .getProvider(type)
                 .orElseThrow(() -> new BinaryStoreException(
-                        "Cannot autoconfigure storage %s, no provider for type %s found"
-                                .formatted(node.name(), type)));
+                        "Cannot autoconfigure storage %s, no provider for type %s found".formatted(node.name(), type)));
         try {
             var storage = provider.createStorage(node);
             this.binaryStoreContext.setStorage(node.name(), storage);

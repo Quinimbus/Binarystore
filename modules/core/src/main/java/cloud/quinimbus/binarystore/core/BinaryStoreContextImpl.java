@@ -21,9 +21,8 @@ public class BinaryStoreContextImpl implements BinaryStoreContext {
         ServiceLoader.load(BinaryStorageProvider.class).forEach(bsp -> {
             var providerAnno = bsp.getClass().getAnnotation(Provider.class);
             if (providerAnno == null) {
-                throw new IllegalStateException(
-                        "Binary storage provider %s is missing the @Provider annotation"
-                                .formatted(bsp.getClass().getName()));
+                throw new IllegalStateException("Binary storage provider %s is missing the @Provider annotation"
+                        .formatted(bsp.getClass().getName()));
             }
             for (String a : providerAnno.alias()) {
                 this.storageProviders.put(a, bsp);

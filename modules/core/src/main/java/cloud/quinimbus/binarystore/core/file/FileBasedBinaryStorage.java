@@ -36,8 +36,7 @@ public class FileBasedBinaryStorage implements BinaryStorage {
                 Files.createDirectories(this.rootPath);
             } catch (IOException ex) {
                 throw new BinaryStoreException(
-                        "Cannot create configured directory %s".formatted(this.rootPath.toString()),
-                        ex);
+                        "Cannot create configured directory %s".formatted(this.rootPath.toString()), ex);
             }
         }
         if (!Files.isDirectory(this.rootPath)) {
@@ -48,21 +47,16 @@ public class FileBasedBinaryStorage implements BinaryStorage {
     }
 
     private Path directoryPath(String id) throws IOException, BinaryStoreException {
-        var path = this.rootPath
-                .resolve(id.substring(0, 1))
-                .resolve(id.substring(1, 2));
+        var path = this.rootPath.resolve(id.substring(0, 1)).resolve(id.substring(1, 2));
         if (!Files.exists(path)) {
             try {
                 Files.createDirectories(path);
             } catch (IOException ex) {
-                throw new BinaryStoreException(
-                        "Cannot create binary directory %s".formatted(path.toString()),
-                        ex);
+                throw new BinaryStoreException("Cannot create binary directory %s".formatted(path.toString()), ex);
             }
         }
         if (!Files.isDirectory(path)) {
-            throw new BinaryStoreException(
-                    "Binary directory %s is not a directory".formatted(path.toString()));
+            throw new BinaryStoreException("Binary directory %s is not a directory".formatted(path.toString()));
         }
         return path;
     }
@@ -78,17 +72,12 @@ public class FileBasedBinaryStorage implements BinaryStorage {
     @Override
     public BinaryStorage subStorage(String... ident) throws BinaryStoreException {
         return switch (ident.length) {
-            case 0 ->
-                this;
-            case 1 ->
-                this.subStorages.computeIfAbsent(
-                ident[0],
-                i -> new FileBasedBinaryStorage(this.rootPath.resolve(i)));
-            default ->
-                this.subStorages.computeIfAbsent(
-                ident[0],
-                i -> new FileBasedBinaryStorage(this.rootPath.resolve(i)))
-                .subStorage(Arrays.copyOfRange(ident, 1, ident.length));
+            case 0 -> this;
+            case 1 -> this.subStorages.computeIfAbsent(
+                    ident[0], i -> new FileBasedBinaryStorage(this.rootPath.resolve(i)));
+            default -> this.subStorages
+                    .computeIfAbsent(ident[0], i -> new FileBasedBinaryStorage(this.rootPath.resolve(i)))
+                    .subStorage(Arrays.copyOfRange(ident, 1, ident.length));
         };
     }
 
@@ -100,17 +89,16 @@ public class FileBasedBinaryStorage implements BinaryStorage {
             if (!Files.exists(metaPath)) {
                 return Optional.empty();
             }
-            try ( var is = Files.newInputStream(metaPath)) {
+            try (var is = Files.newInputStream(metaPath)) {
                 var meta = this.mapper.readValue(is, BinaryMeta.class);
                 var attr = Files.readAttributes(binaryPath, BasicFileAttributes.class);
-                return Optional.of(
-                        new Binary(
-                                id,
-                                meta.contentType(),
-                                attr.size(),
-                                attr.creationTime().toInstant(),
-                                attr.lastModifiedTime().toInstant(),
-                                meta.hash()));
+                return Optional.of(new Binary(
+                        id,
+                        meta.contentType(),
+                        attr.size(),
+                        attr.creationTime().toInstant(),
+                        attr.lastModifiedTime().toInstant(),
+                        meta.hash()));
             }
         } catch (IOException ex) {
             throw new BinaryStoreException("Cannot load the binary data for %s".formatted(id), ex);
@@ -152,14 +140,15 @@ public class FileBasedBinaryStorage implements BinaryStorage {
         }
     }
 
-    private Binary save(String id, Path binaryPath, Path metaPath, InputStream is, String contentType) throws BinaryStoreException {
-        try ( var dis = new DigestInputStream(is, MessageDigest.getInstance("SHA-1"))) {
+    private Binary save(String id, Path binaryPath, Path metaPath, InputStream is, String contentType)
+            throws BinaryStoreException {
+        try (var dis = new DigestInputStream(is, MessageDigest.getInstance("SHA-1"))) {
             Files.copy(dis, binaryPath, StandardCopyOption.REPLACE_EXISTING);
             if (!Files.exists(metaPath)) {
                 Files.createFile(metaPath);
             }
             var hash = Base64.getEncoder().encodeToString(dis.getMessageDigest().digest());
-            try ( var mos = Files.newOutputStream(metaPath)) {
+            try (var mos = Files.newOutputStream(metaPath)) {
                 this.mapper.writeValue(mos, new BinaryMeta(contentType, hash));
             }
             var attr = Files.readAttributes(binaryPath, BasicFileAttributes.class);

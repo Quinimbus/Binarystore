@@ -4,11 +4,11 @@ import cloud.quinimbus.binarystore.api.BinaryStoreContext;
 import cloud.quinimbus.binarystore.api.BinaryStoreException;
 import cloud.quinimbus.binarystore.api.storage.BinaryStorage;
 import cloud.quinimbus.common.annotations.Id;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.Dependent;
-import javax.enterprise.inject.Produces;
-import javax.enterprise.inject.spi.InjectionPoint;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Produces;
+import jakarta.enterprise.inject.spi.InjectionPoint;
+import jakarta.inject.Inject;
 
 @ApplicationScoped
 public class BinaryStoreProducer {

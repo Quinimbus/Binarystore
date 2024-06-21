@@ -4,11 +4,11 @@ import cloud.quinimbus.binarystore.api.BinaryStoreContext;
 import cloud.quinimbus.binarystore.api.BinaryStoreException;
 import cloud.quinimbus.config.api.ConfigNode;
 import cloud.quinimbus.config.cdi.ConfigPath;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
 import java.util.ServiceLoader;
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Produces;
-import javax.inject.Inject;
 import name.falgout.jeffrey.throwing.stream.ThrowingStream;
 
 @ApplicationScoped

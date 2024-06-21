@@ -9,9 +9,9 @@ module cloud.quinimbus.binarystore.cdi {
     requires cloud.quinimbus.common.annotations;
     requires cloud.quinimbus.config.api;
     requires cloud.quinimbus.config.cdi;
-    requires jakarta.enterprise.cdi.api;
-    requires java.annotation;
-    requires jakarta.inject.api;
+    requires jakarta.cdi;
+    requires jakarta.annotation;
+    requires jakarta.inject;
     requires throwing.interfaces;
     requires throwing.streams;
 }

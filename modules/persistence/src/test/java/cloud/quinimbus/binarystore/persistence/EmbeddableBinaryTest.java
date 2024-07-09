@@ -1,0 +1,88 @@
+package cloud.quinimbus.binarystore.persistence;
+
+import cloud.quinimbus.binarystore.api.BinaryStoreContext;
+import cloud.quinimbus.binarystore.api.BinaryStoreException;
+import cloud.quinimbus.common.tools.SingletonContextLoader;
+import static org.junit.jupiter.api.Assertions.*;
+
+import cloud.quinimbus.common.tools.Records;
+import cloud.quinimbus.persistence.api.PersistenceContext;
+import cloud.quinimbus.persistence.api.PersistenceException;
+import cloud.quinimbus.persistence.api.annotation.Entity;
+import cloud.quinimbus.persistence.api.annotation.EntityIdField;
+import cloud.quinimbus.persistence.api.annotation.Schema;
+import cloud.quinimbus.persistence.api.entity.EntityReaderInitialisationException;
+import cloud.quinimbus.persistence.api.entity.EntityWriterInitialisationException;
+import cloud.quinimbus.persistence.api.lifecycle.EntityPostSaveEvent;
+import cloud.quinimbus.persistence.api.schema.InvalidSchemaException;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.util.Map;
+import java.util.ServiceLoader;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+public class EmbeddableBinaryTest {
+
+    private PersistenceContext persistenceContext;
+
+    @Entity(schema = @Schema(id = "unit-test", version = 1))
+    public record MyEntity(@EntityIdField String id, EmbeddableBinary binary) {}
+
+    @BeforeEach
+    public void init() throws IOException, BinaryStoreException {
+        this.persistenceContext =
+                ServiceLoader.load(PersistenceContext.class).findFirst().get();
+        var binaryStoreContext = SingletonContextLoader.loadContext(BinaryStoreContext.class, ServiceLoader::load);
+        var tmpPath = Files.createTempDirectory("quinimbus-persistence-test");
+        binaryStoreContext.setStorage(
+                "persistence-test",
+                binaryStoreContext.getProvider("file").get().createStorage(Map.of("rootPath", tmpPath.toString())));
+    }
+
+    @Test
+    public void testWriteAndReadNullBinary()
+            throws InvalidSchemaException, EntityWriterInitialisationException, EntityReaderInitialisationException,
+                    PersistenceException {
+        var schema = this.persistenceContext.importRecordSchema(MyEntity.class);
+        var storage = this.persistenceContext.setInMemorySchemaStorage(schema.id());
+        var typeId = Records.idFromRecordClass(MyEntity.class);
+        var entityType = schema.entityTypes().get(typeId);
+        var writer = this.persistenceContext.getRecordEntityWriter(entityType, MyEntity.class);
+        var reader = this.persistenceContext.getRecordEntityReader(entityType, MyEntity.class);
+
+        this.persistenceContext.onLifecycleEvent(schema.id(), EntityPostSaveEvent.class, entityType, e -> {});
+
+        var entity = new MyEntity("1", null);
+        storage.save(reader.read(entity));
+        var loadedEntity = storage.find(entityType, "1").map(writer::write).orElseThrow();
+        assertNull(loadedEntity.binary());
+    }
+
+    @Test
+    public void testWriteAndReadBinary()
+            throws InvalidSchemaException, EntityWriterInitialisationException, EntityReaderInitialisationException,
+                    PersistenceException, BinaryStoreException, IOException {
+        var schema = this.persistenceContext.importRecordSchema(MyEntity.class);
+        var storage = this.persistenceContext.setInMemorySchemaStorage(schema.id());
+        var typeId = Records.idFromRecordClass(MyEntity.class);
+        var entityType = schema.entityTypes().get(typeId);
+        var writer = this.persistenceContext.getRecordEntityWriter(entityType, MyEntity.class);
+        var reader = this.persistenceContext.getRecordEntityReader(entityType, MyEntity.class);
+
+        var entity = new MyEntity(
+                "1",
+                EmbeddableBinary.newBinary(
+                        "plain/text",
+                        () -> new ByteArrayInputStream("Hello World!".getBytes(Charset.forName("UTF-8")))));
+        storage.save(reader.read(entity));
+        var loadedEntity = storage.find(entityType, "1").map(writer::write).orElseThrow();
+        assertNotNull(loadedEntity.binary().id(), "binary id missing");
+        assertNotNull(loadedEntity.binary().contentLoader(), "binary content loader missing");
+        try (var is = loadedEntity.binary.contentLoader().get()) {
+            assertEquals("Hello World!", new String(is.readAllBytes()));
+        }
+    }
+}

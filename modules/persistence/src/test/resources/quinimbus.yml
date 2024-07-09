@@ -1,0 +1,5 @@
+binary:
+    persistence-integration:
+        schemas:
+            unit-test:
+                store: persistence-test

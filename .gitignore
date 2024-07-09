@@ -25,3 +25,4 @@ hs_err_pid*
 /modules/api/target/
 /modules/cdi/target/
 /modules/core/target/
+/modules/persistence/target/

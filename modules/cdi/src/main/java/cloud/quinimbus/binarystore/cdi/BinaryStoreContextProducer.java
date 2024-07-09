@@ -2,10 +2,13 @@ package cloud.quinimbus.binarystore.cdi;
 
 import cloud.quinimbus.binarystore.api.BinaryStoreContext;
 import cloud.quinimbus.binarystore.api.BinaryStoreException;
+import cloud.quinimbus.common.tools.SingletonContextLoader;
 import cloud.quinimbus.config.api.ConfigNode;
 import cloud.quinimbus.config.cdi.ConfigPath;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Initialized;
+import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
 import java.util.ServiceLoader;
@@ -21,10 +24,10 @@ public class BinaryStoreContextProducer {
     private ConfigNode configNode;
 
     public BinaryStoreContextProducer() throws BinaryStoreException {
-        this.binaryStoreContext = ServiceLoader.load(BinaryStoreContext.class)
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("Cannot find any BinaryStoreContext implementation"));
+        this.binaryStoreContext = SingletonContextLoader.loadContext(BinaryStoreContext.class, ServiceLoader::load);
     }
+
+    public void onStartup(@Observes @Initialized(ApplicationScoped.class) Object o) {}
 
     @PostConstruct
     public void init() throws BinaryStoreException {

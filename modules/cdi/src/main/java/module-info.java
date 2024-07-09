@@ -7,6 +7,7 @@ module cloud.quinimbus.binarystore.cdi {
 
     requires cloud.quinimbus.binarystore.api;
     requires cloud.quinimbus.common.annotations;
+    requires cloud.quinimbus.common.tools;
     requires cloud.quinimbus.config.api;
     requires cloud.quinimbus.config.cdi;
     requires jakarta.cdi;

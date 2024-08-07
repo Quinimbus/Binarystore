@@ -60,12 +60,9 @@ public class EmbeddableBinaryHandler extends EmbeddedPropertyHandler {
     }
 
     public void onPreSave(EntityPreSaveEvent event) {
-        System.out.println("[onPreSave]");
         if (event.mutatedProperties().contains(this.getProperty())) {
-            System.out.println("[onPreSave] contains " + this.getProperty());
             var entity = event.entity();
             var property = (EmbeddedObject) entity.getProperty(this.getProperty());
-            System.out.println("[onPreSave] property " + property);
             String binaryId = property.getProperty("id");
             String binaryContentType = property.getProperty("contentType");
             var binaryNewContent = property.getTransientFields().get("newContent");

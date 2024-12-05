@@ -19,7 +19,8 @@ public record EmbeddableBinary(
         Instant created,
         Instant modified,
         @EntityTransientField @JsonIgnore BinaryStoreContentLoader contentLoader,
-        @EntityTransientField @JsonIgnore ContentLoader newContent)
+        @EntityTransientField @JsonIgnore ContentLoader newContent,
+        @EntityTransientField String multipartId)
         implements EmbeddableBinaryBuilder.With {
 
     public static interface BinaryStoreContentLoader {

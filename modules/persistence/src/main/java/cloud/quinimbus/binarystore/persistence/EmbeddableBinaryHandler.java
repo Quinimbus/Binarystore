@@ -13,8 +13,12 @@ import cloud.quinimbus.persistence.api.entity.UnparseableValueException;
 import cloud.quinimbus.persistence.api.lifecycle.EntityPostLoadEvent;
 import cloud.quinimbus.persistence.api.lifecycle.EntityPreSaveEvent;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
+import java.util.stream.IntStream;
 
 public class EmbeddableBinaryHandler extends EmbeddedPropertyHandler {
 
@@ -60,9 +64,43 @@ public class EmbeddableBinaryHandler extends EmbeddedPropertyHandler {
     }
 
     public void onPreSave(EntityPreSaveEvent event) {
-        if (event.mutatedProperties().contains(this.getProperty())) {
+        if (event.streamDiffsForProperty(this.getProperty(), EmbeddedObject.class)
+                .findAny()
+                .isPresent()) {
+            var entityChanged = new AtomicBoolean(false);
             var entity = event.entity();
-            var property = (EmbeddedObject) entity.getProperty(this.getProperty());
+            var propertyType = entity.getType().property(this.getProperty()).orElseThrow();
+            switch (propertyType.structure()) {
+                case SINGLE -> {
+                    var property = (EmbeddedObject) entity.getProperty(this.getProperty());
+                    this.onPreSave(property, b -> {
+                        entity.setProperty(this.getProperty(), b);
+                        entityChanged.set(true);
+                    });
+                }
+                case LIST -> {
+                    var property = (List<EmbeddedObject>) entity.getProperty(this.getProperty());
+                    var listChanged = new AtomicBoolean(false);
+                    IntStream.range(0, property.size())
+                            .mapToObj(i -> Map.entry(i, property.get(i)))
+                            .forEach(e -> {
+                                this.onPreSave(e.getValue(), b -> property.set(e.getKey(), b));
+                                listChanged.set(true);
+                            });
+                    if (listChanged.get()) {
+                        entity.setProperty(this.getProperty(), property);
+                        entityChanged.set(true);
+                    }
+                }
+            }
+            if (entityChanged.get()) {
+                event.changedEntity().accept(entity);
+            }
+        }
+    }
+
+    private void onPreSave(EmbeddedObject property, Consumer<EmbeddedObject> newPropertyHandler) {
+        if (property != null) {
             String binaryId = property.getProperty("id");
             String binaryContentType = property.getProperty("contentType");
             var binaryNewContent = property.getTransientFields().get("newContent");
@@ -71,10 +109,9 @@ public class EmbeddableBinaryHandler extends EmbeddedPropertyHandler {
                     try (var is = newContentLoader.get()) {
                         var savedBinary = this.getStorage().save(is, binaryContentType);
                         var binary = this.toEmbeddedBinary(savedBinary);
-                        entity.setProperty(this.getProperty(), binary);
-                        event.changedEntity().accept(entity);
+                        newPropertyHandler.accept(binary);
                     } catch (IOException | BinaryStoreException ex) {
-                        throw new IllegalStateException("Failed to save a entity binary", ex);
+                        throw new IllegalStateException("Failed to save an entity binary", ex);
                     }
             }
         }
@@ -82,10 +119,36 @@ public class EmbeddableBinaryHandler extends EmbeddedPropertyHandler {
 
     public void onPostLoad(EntityPostLoadEvent event) {
         var entity = event.entity();
-        var property = (EmbeddedObject) entity.getProperty(this.getProperty());
-        if (property != null) {
-            var binary = this.toEmbeddedBinaryWithLoader(property);
-            entity.setProperty(this.getProperty(), binary);
+        var propertyType = entity.getType().property(this.getProperty()).orElseThrow();
+        var entityChanged = new AtomicBoolean(false);
+        switch (propertyType.structure()) {
+            case SINGLE -> {
+                var property = (EmbeddedObject) entity.getProperty(this.getProperty());
+                if (property != null) {
+                    var binary = this.toEmbeddedBinaryWithLoader(property);
+                    entity.setProperty(this.getProperty(), binary);
+                    entityChanged.set(true);
+                }
+            }
+            case LIST -> {
+                var property = (List<EmbeddedObject>) entity.getProperty(this.getProperty());
+                if (property != null) {
+                    var listChanged = new AtomicBoolean(false);
+                    IntStream.range(0, property.size())
+                            .mapToObj(i -> Map.entry(i, property.get(i)))
+                            .forEach(e -> {
+                                var binary = this.toEmbeddedBinaryWithLoader(e.getValue());
+                                property.set(e.getKey(), binary);
+                                listChanged.set(true);
+                            });
+                    if (listChanged.get()) {
+                        entity.setProperty(this.getProperty(), property);
+                        entityChanged.set(true);
+                    }
+                }
+            }
+        }
+        if (entityChanged.get()) {
             event.changedEntity().accept(entity);
         }
     }

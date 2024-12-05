@@ -22,7 +22,7 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 
-/modules/api/target/
-/modules/cdi/target/
-/modules/core/target/
-/modules/persistence/target/
+/modules/*/target/
+/modules/*/nbproject/
+/target/
+nb*

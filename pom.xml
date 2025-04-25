@@ -48,7 +48,7 @@
                         <path>
                             <groupId>io.soabase.record-builder</groupId>
                             <artifactId>record-builder-processor</artifactId>
-                            <version>44</version>
+                            <version>45</version>
                         </path>
                     </annotationProcessorPaths>
                     <forceJavacCompilerUse>true</forceJavacCompilerUse>

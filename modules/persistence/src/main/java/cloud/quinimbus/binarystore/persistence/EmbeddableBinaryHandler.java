@@ -103,9 +103,17 @@ public class EmbeddableBinaryHandler extends EmbeddedPropertyHandler {
         if (property != null) {
             String binaryId = property.getProperty("id");
             String binaryContentType = property.getProperty("contentType");
+            var propertyContext = getPropertyContext("embeddableBinary", EmbeddableBinaryContext.class);
+            if (propertyContext.isPresent()) {
+                var allowedContentTypes = propertyContext.orElseThrow().allowedContentTypes();
+                if (!allowedContentTypes.isEmpty()
+                        && allowedContentTypes.stream().noneMatch(act -> contentTypeMatches(binaryContentType, act))) {
+                    throw new IllegalArgumentException("Content-Type %s not allowed".formatted(binaryContentType));
+                }
+            }
             var binaryNewContent = property.getTransientFields().get("newContent");
             if (binaryId == null && binaryNewContent != null) {
-                if (binaryNewContent instanceof EmbeddableBinary.ContentLoader newContentLoader)
+                if (binaryNewContent instanceof EmbeddableBinary.ContentLoader newContentLoader) {
                     try (var is = newContentLoader.get()) {
                         var savedBinary = this.getStorage().save(is, binaryContentType);
                         var binary = this.toEmbeddedBinary(savedBinary);
@@ -113,6 +121,7 @@ public class EmbeddableBinaryHandler extends EmbeddedPropertyHandler {
                     } catch (IOException | BinaryStoreException ex) {
                         throw new IllegalStateException("Failed to save an entity binary", ex);
                     }
+                }
             }
         }
     }
@@ -191,5 +200,12 @@ public class EmbeddableBinaryHandler extends EmbeddedPropertyHandler {
         } catch (UnparseableValueException ex) {
             throw new IllegalStateException(ex);
         }
+    }
+
+    private boolean contentTypeMatches(String contentType, String requiredContentType) {
+        if (requiredContentType.endsWith("/*")) {
+            return contentType.startsWith(requiredContentType.substring(0, requiredContentType.length() - 1));
+        }
+        return contentType.equals(requiredContentType);
     }
 }

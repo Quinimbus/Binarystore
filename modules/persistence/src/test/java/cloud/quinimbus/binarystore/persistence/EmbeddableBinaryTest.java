@@ -36,6 +36,16 @@ public class EmbeddableBinaryTest {
     public record MyListEntity(
             @EntityIdField String id, @EntityField(type = EmbeddableBinary.class) List<EmbeddableBinary> binaries) {}
 
+    @Entity(schema = @Schema(id = "unit-test", version = 1))
+    public record MyValidatedEntity(
+            @EntityIdField String id, @ValidateBinary(contentType = {"application/json"}) EmbeddableBinary binary) {}
+
+    @Entity(schema = @Schema(id = "unit-test", version = 1))
+    public record MyValidatedListEntity(
+            @EntityIdField String id,
+            @EntityField(type = EmbeddableBinary.class) @ValidateBinary(contentType = {"application/json"})
+                    List<EmbeddableBinary> binary) {}
+
     @BeforeEach
     public void init() throws IOException, BinaryStoreException {
         this.persistenceContext =
@@ -115,5 +125,43 @@ public class EmbeddableBinaryTest {
         try (var is = loadedEntity.binaries().get(0).contentLoader().get()) {
             assertEquals("Hello World!", new String(is.readAllBytes()));
         }
+    }
+
+    @Test
+    public void testWriteAndReadValidatedInvalidBinary()
+            throws InvalidSchemaException, EntityWriterInitialisationException, EntityReaderInitialisationException,
+                    PersistenceException, BinaryStoreException, IOException {
+        var schema = this.persistenceContext.importRecordSchema(MyValidatedEntity.class);
+        var storage = this.persistenceContext.setInMemorySchemaStorage(schema.id());
+        var typeId = Records.idFromRecordClass(MyValidatedEntity.class);
+        var entityType = schema.entityTypes().get(typeId);
+        var reader = this.persistenceContext.getRecordEntityReader(entityType, MyValidatedEntity.class);
+
+        var entity = new MyValidatedEntity(
+                "1",
+                EmbeddableBinary.newBinary(
+                        "plain/text",
+                        () -> new ByteArrayInputStream("Hello World!".getBytes(Charset.forName("UTF-8")))));
+        var ex = assertThrows(IllegalArgumentException.class, () -> storage.save(reader.read(entity)));
+        assertEquals("Content-Type plain/text not allowed", ex.getMessage());
+    }
+
+    @Test
+    public void testWriteAndReadValidatedInvalidBinaryList()
+            throws InvalidSchemaException, EntityWriterInitialisationException, EntityReaderInitialisationException,
+                    PersistenceException, BinaryStoreException, IOException {
+        var schema = this.persistenceContext.importRecordSchema(MyValidatedListEntity.class);
+        var storage = this.persistenceContext.setInMemorySchemaStorage(schema.id());
+        var typeId = Records.idFromRecordClass(MyValidatedListEntity.class);
+        var entityType = schema.entityTypes().get(typeId);
+        var reader = this.persistenceContext.getRecordEntityReader(entityType, MyValidatedListEntity.class);
+
+        var entity = new MyValidatedListEntity(
+                "1",
+                List.of(EmbeddableBinary.newBinary(
+                        "plain/text",
+                        () -> new ByteArrayInputStream("Hello World!".getBytes(Charset.forName("UTF-8"))))));
+        var ex = assertThrows(IllegalArgumentException.class, () -> storage.save(reader.read(entity)));
+        assertEquals("Content-Type plain/text not allowed", ex.getMessage());
     }
 }

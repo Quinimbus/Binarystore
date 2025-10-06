@@ -16,6 +16,7 @@ module cloud.quinimbus.binarystore.core {
 
     requires cloud.quinimbus.binarystore.api;
     requires cloud.quinimbus.common.annotations;
+    requires cloud.quinimbus.common.tools;
     requires cloud.quinimbus.config.api;
     requires cloud.quinimbus.tools;
     requires com.fasterxml.jackson.databind;

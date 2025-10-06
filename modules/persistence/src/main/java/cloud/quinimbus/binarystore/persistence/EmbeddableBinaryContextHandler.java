@@ -8,9 +8,7 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Provider(
-        name = "embeddableBinary",
-        alias = {})
+@Provider(id = "embeddableBinary", name = "Context handler for embeddable binary record fields")
 public class EmbeddableBinaryContextHandler implements RecordPropertyContextHandler {
 
     @Override

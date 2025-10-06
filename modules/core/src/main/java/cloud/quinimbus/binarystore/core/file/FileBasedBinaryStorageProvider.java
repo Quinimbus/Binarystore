@@ -9,7 +9,7 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
 
-@Provider(name = "Filesystem based binary storage provider", alias = "file", priority = 0)
+@Provider(id = "file", name = "Filesystem based binary storage provider", priority = 0)
 public class FileBasedBinaryStorageProvider implements BinaryStorageProvider<FileBasedBinaryStorage> {
 
     @Override

@@ -3,7 +3,9 @@ package cloud.quinimbus.binarystore.core;
 import cloud.quinimbus.binarystore.api.BinaryStoreContext;
 import cloud.quinimbus.binarystore.api.storage.BinaryStorage;
 import cloud.quinimbus.binarystore.api.storage.BinaryStorageProvider;
-import cloud.quinimbus.common.annotations.Provider;
+import cloud.quinimbus.common.tools.ProviderLoader;
+import cloud.quinimbus.tools.function.LazySingletonSupplier;
+import cloud.quinimbus.tools.lang.TypeRef;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -13,21 +15,12 @@ public class BinaryStoreContextImpl implements BinaryStoreContext {
 
     private final Map<String, BinaryStorage> storages;
 
-    private final Map<String, BinaryStorageProvider<? extends BinaryStorage>> storageProviders;
+    private final Map<String, LazySingletonSupplier<BinaryStorageProvider<? extends BinaryStorage>>> storageProviders;
 
     public BinaryStoreContextImpl() {
         this.storages = new LinkedHashMap<>();
-        this.storageProviders = new LinkedHashMap<>();
-        ServiceLoader.load(BinaryStorageProvider.class).forEach(bsp -> {
-            var providerAnno = bsp.getClass().getAnnotation(Provider.class);
-            if (providerAnno == null) {
-                throw new IllegalStateException("Binary storage provider %s is missing the @Provider annotation"
-                        .formatted(bsp.getClass().getName()));
-            }
-            for (String a : providerAnno.alias()) {
-                this.storageProviders.put(a, bsp);
-            }
-        });
+        this.storageProviders = ProviderLoader.loadProviders(
+                new TypeRef<BinaryStorageProvider<? extends BinaryStorage>>() {}, ServiceLoader::load, true);
     }
 
     @Override
@@ -42,6 +35,6 @@ public class BinaryStoreContextImpl implements BinaryStoreContext {
 
     @Override
     public <T extends BinaryStorage> Optional<? extends BinaryStorageProvider<T>> getProvider(String alias) {
-        return Optional.ofNullable((BinaryStorageProvider<T>) this.storageProviders.get(alias));
+        return Optional.ofNullable(this.storageProviders.get(alias)).map(p -> (BinaryStorageProvider<T>) p.get());
     }
 }

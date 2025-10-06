@@ -69,6 +69,24 @@ public class FileBasedBinaryStorage implements BinaryStorage {
         return this.directoryPath(id).resolve(id + ".json");
     }
 
+    private void idValid(String id) {
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("binary id may not be null or empty");
+        }
+    }
+
+    private void inputStreamValid(InputStream is) {
+        if (is == null) {
+            throw new IllegalArgumentException("InputStream may not be null");
+        }
+    }
+
+    private void contentTypeValid(String contentType) {
+        if (contentType == null || contentType.isBlank()) {
+            throw new IllegalArgumentException("content type may not be null or empty");
+        }
+    }
+
     @Override
     public BinaryStorage subStorage(String... ident) throws BinaryStoreException {
         return switch (ident.length) {
@@ -83,6 +101,7 @@ public class FileBasedBinaryStorage implements BinaryStorage {
 
     @Override
     public Optional<Binary> load(String id) throws BinaryStoreException {
+        idValid(id);
         try {
             var binaryPath = this.binaryPath(id);
             var metaPath = this.metaPath(id);
@@ -107,6 +126,7 @@ public class FileBasedBinaryStorage implements BinaryStorage {
 
     @Override
     public InputStream read(String id) throws BinaryStoreException {
+        idValid(id);
         try {
             return Files.newInputStream(this.binaryPath(id));
         } catch (IOException ex) {
@@ -116,6 +136,8 @@ public class FileBasedBinaryStorage implements BinaryStorage {
 
     @Override
     public Binary save(InputStream is, String contentType) throws BinaryStoreException {
+        inputStreamValid(is);
+        contentTypeValid(contentType);
         try {
             String id;
             Path binaryPath;
@@ -133,6 +155,9 @@ public class FileBasedBinaryStorage implements BinaryStorage {
 
     @Override
     public Binary save(String id, InputStream is, String contentType) throws BinaryStoreException {
+        idValid(id);
+        inputStreamValid(is);
+        contentTypeValid(contentType);
         try {
             return this.save(id, this.binaryPath(id), this.metaPath(id), is, contentType);
         } catch (IOException ex) {
@@ -166,6 +191,7 @@ public class FileBasedBinaryStorage implements BinaryStorage {
 
     @Override
     public void remove(String id) throws BinaryStoreException {
+        idValid(id);
         try {
             Files.deleteIfExists(this.binaryPath(id));
             Files.deleteIfExists(this.metaPath(id));

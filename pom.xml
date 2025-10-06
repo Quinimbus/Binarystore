@@ -12,6 +12,7 @@
         <module>modules/cdi</module>
         <module>modules/core</module>
         <module>modules/persistence</module>
+        <module>modules/tika</module>
     </modules>
     
     <properties>
@@ -84,20 +85,20 @@
                         <artifactId>flatten-maven-plugin</artifactId>
                         <version>1.7.3</version>
                         <executions>
-                          <execution>
-                            <id>flatten</id>
-                            <phase>process-resources</phase>
-                            <goals>
-                              <goal>flatten</goal>
-                            </goals>
-                          </execution>
-                          <execution>
-                            <id>flatten.clean</id>
-                            <phase>clean</phase>
-                            <goals>
-                              <goal>clean</goal>
-                            </goals>
-                          </execution>
+                            <execution>
+                                <id>flatten</id>
+                                <phase>process-resources</phase>
+                                <goals>
+                                    <goal>flatten</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>flatten.clean</id>
+                                <phase>clean</phase>
+                                <goals>
+                                    <goal>clean</goal>
+                                </goals>
+                            </execution>
                         </executions>
                     </plugin>
                 </plugins>

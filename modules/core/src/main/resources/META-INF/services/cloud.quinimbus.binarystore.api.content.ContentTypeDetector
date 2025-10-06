@@ -1,0 +1,2 @@
+cloud.quinimbus.binarystore.core.content.JavaContentTypeDetector
+cloud.quinimbus.binarystore.core.content.NoopContentTypeDetector

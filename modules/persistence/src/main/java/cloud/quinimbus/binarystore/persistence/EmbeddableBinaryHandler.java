@@ -12,6 +12,7 @@ import cloud.quinimbus.persistence.api.entity.EmbeddedPropertyHandler;
 import cloud.quinimbus.persistence.api.entity.UnparseableValueException;
 import cloud.quinimbus.persistence.api.lifecycle.EntityPostLoadEvent;
 import cloud.quinimbus.persistence.api.lifecycle.EntityPreSaveEvent;
+import java.io.InputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -102,19 +103,11 @@ public class EmbeddableBinaryHandler extends EmbeddedPropertyHandler {
     private void onPreSave(EmbeddedObject property, Consumer<EmbeddedObject> newPropertyHandler) {
         if (property != null) {
             String binaryId = property.getProperty("id");
-            String binaryContentType = property.getProperty("contentType");
-            var propertyContext = getPropertyContext("embeddableBinary", EmbeddableBinaryContext.class);
-            if (propertyContext.isPresent()) {
-                var allowedContentTypes = propertyContext.orElseThrow().allowedContentTypes();
-                if (!allowedContentTypes.isEmpty()
-                        && allowedContentTypes.stream().noneMatch(act -> contentTypeMatches(binaryContentType, act))) {
-                    throw new IllegalArgumentException("Content-Type %s not allowed".formatted(binaryContentType));
-                }
-            }
             var binaryNewContent = property.getTransientFields().get("newContent");
             if (binaryId == null && binaryNewContent != null) {
                 if (binaryNewContent instanceof EmbeddableBinary.ContentLoader newContentLoader) {
                     try (var is = newContentLoader.get()) {
+                        var binaryContentType = validateContentType(property, is);
                         var savedBinary = this.getStorage().save(is, binaryContentType);
                         var binary = this.toEmbeddedBinary(savedBinary);
                         newPropertyHandler.accept(binary);
@@ -207,5 +200,22 @@ public class EmbeddableBinaryHandler extends EmbeddedPropertyHandler {
             return contentType.startsWith(requiredContentType.substring(0, requiredContentType.length() - 1));
         }
         return contentType.equals(requiredContentType);
+    }
+
+    private String validateContentType(EmbeddedObject property, InputStream inputStream) throws IOException {
+        String givenBinaryContentType = property.getProperty("contentType");
+        var binaryContentType = binaryStoreContext
+                .getContentTypeDetector()
+                .detect(inputStream, givenBinaryContentType)
+                .orElse(givenBinaryContentType);
+        var propertyContext = getPropertyContext("embeddableBinary", EmbeddableBinaryContext.class);
+        if (propertyContext.isPresent()) {
+            var allowedContentTypes = propertyContext.orElseThrow().allowedContentTypes();
+            if (!allowedContentTypes.isEmpty()
+                    && allowedContentTypes.stream().noneMatch(act -> contentTypeMatches(binaryContentType, act))) {
+                throw new IllegalArgumentException("Content-Type %s not allowed".formatted(binaryContentType));
+            }
+        }
+        return binaryContentType;
     }
 }

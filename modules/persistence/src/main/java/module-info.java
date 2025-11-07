@@ -1,5 +1,5 @@
-import cloud.quinimbus.persistence.api.records.RecordPropertyContextHandler;
 import cloud.quinimbus.binarystore.persistence.EmbeddableBinaryContextHandler;
+import cloud.quinimbus.persistence.api.records.RecordPropertyContextHandler;
 
 module cloud.quinimbus.binarystore.persistence {
     uses cloud.quinimbus.binarystore.api.BinaryStoreContext;

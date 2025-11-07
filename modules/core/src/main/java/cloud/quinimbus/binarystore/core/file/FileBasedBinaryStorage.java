@@ -91,11 +91,12 @@ public class FileBasedBinaryStorage implements BinaryStorage {
     public BinaryStorage subStorage(String... ident) throws BinaryStoreException {
         return switch (ident.length) {
             case 0 -> this;
-            case 1 -> this.subStorages.computeIfAbsent(
-                    ident[0], i -> new FileBasedBinaryStorage(this.rootPath.resolve(i)));
-            default -> this.subStorages
-                    .computeIfAbsent(ident[0], i -> new FileBasedBinaryStorage(this.rootPath.resolve(i)))
-                    .subStorage(Arrays.copyOfRange(ident, 1, ident.length));
+            case 1 ->
+                this.subStorages.computeIfAbsent(ident[0], i -> new FileBasedBinaryStorage(this.rootPath.resolve(i)));
+            default ->
+                this.subStorages
+                        .computeIfAbsent(ident[0], i -> new FileBasedBinaryStorage(this.rootPath.resolve(i)))
+                        .subStorage(Arrays.copyOfRange(ident, 1, ident.length));
         };
     }
 

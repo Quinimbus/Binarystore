@@ -1,5 +1,7 @@
 package cloud.quinimbus.binarystore.persistence;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import cloud.quinimbus.binarystore.api.BinaryStoreContext;
 import cloud.quinimbus.binarystore.api.BinaryStoreException;
 import cloud.quinimbus.common.tools.Records;
@@ -21,7 +23,6 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
-import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -34,17 +35,22 @@ public class EmbeddableBinaryTest {
 
     @Entity(schema = @Schema(id = "unit-test", version = 1))
     public record MyListEntity(
-            @EntityIdField String id, @EntityField(type = EmbeddableBinary.class) List<EmbeddableBinary> binaries) {}
+            @EntityIdField String id,
+            @EntityField(type = EmbeddableBinary.class) List<EmbeddableBinary> binaries) {}
 
     @Entity(schema = @Schema(id = "unit-test", version = 1))
     public record MyValidatedEntity(
-            @EntityIdField String id, @ValidateBinary(contentType = {"application/json"}) EmbeddableBinary binary) {}
+            @EntityIdField String id,
+
+            @ValidateBinary(contentType = {"application/json"})
+            EmbeddableBinary binary) {}
 
     @Entity(schema = @Schema(id = "unit-test", version = 1))
     public record MyValidatedListEntity(
             @EntityIdField String id,
+
             @EntityField(type = EmbeddableBinary.class) @ValidateBinary(contentType = {"application/json"})
-                    List<EmbeddableBinary> binary) {}
+            List<EmbeddableBinary> binary) {}
 
     @BeforeEach
     public void init() throws IOException, BinaryStoreException {
